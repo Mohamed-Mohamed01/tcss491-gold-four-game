@@ -1,0 +1,14 @@
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+  }
+  
+  .wrap {
+    padding: 16px;
+  }
+  
+  canvas {
+    border: 2px solid #111;
+    background: #eee;
+  }
+  
