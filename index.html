@@ -4,26 +4,62 @@
   <meta charset="utf-8">
   <title>Game Project</title>
 
-    <script src="./engine/assetmanager.js"></script>
-    <script src="./engine/timer.js"></script>
-    <script src="./engine/gameengine.js"></script>
-    <script src="./engine/util.js"></script>
+  <!-- Engine scripts -->
+  <script src="./engine/assetmanager.js"></script>
+  <script src="./engine/timer.js"></script>
+  <script src="./engine/gameengine.js"></script>
+  <script src="./engine/util.js"></script>
 
-    <script src="./game/camera.js"></script>
-    <script src="./game/tilemap.js"></script>
-    <script src="./game/player.js"></script>
+  <!-- Game systems -->
+  <script src="./game/camera.js"></script>
+  <script src="./game/tilemap.js"></script>
+  <script src="./game/player.js"></script>
 
-    <script src="./main.js"></script>
+  <!-- Enemy factory and logic -->
+  <script src="./game/enemy_creator.js"></script>
+  <script src="./game/enemy.js"></script>
 
+  <!-- Collectible keys -->
+  <script src="./game/key.js"></script>
+
+  <!-- Entry point -->
+  <script src="./main.js"></script>
+
+  <link rel="stylesheet" href="./styles/styles.css">
+
+
+     
 </head>
+
 <body>
-  <canvas id="gameWorld"
-          width="1280"
-          height="720"
-          style="background: black; border: 3px solid #222; image-rendering: pixelated;"
-          tabindex="0"
-          autofocus></canvas>
+  <!-- Debug toggle -->
+  <button id="debugToggle" type="button">Debug: OFF</button>
+
+  <div id="gameContainer">
+    <!-- Main game canvas -->
+    <canvas id="gameWorld"
+            width="1280"
+            height="720"
+            style="background: black; border: 3px solid #222; image-rendering: pixelated;"
+            tabindex="0"
+            autofocus>
+    </canvas>
+
+    <!-- Game over screen -->
+    <div id="gameOverOverlay">
+      <div class="panel">
+        <h1>GAME OVER</h1>
+        <p>Press R to restart</p>
+      </div>
+    </div>
+
+    <!-- Win screen -->
+    <div id="winOverlay">
+      <div class="panel">
+        <h1>YOU WIN!</h1>
+        <p>Press R to restart</p>
+      </div>
+    </div>
+  </div>
 </body>
 </html>
-
-
