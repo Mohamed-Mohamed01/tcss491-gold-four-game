@@ -123,6 +123,33 @@ ASSET_MANAGER.downloadAll(() => {
     });
   }
 
+  // Welcome screen controls (start + how to play)
+  const welcomeOverlay = document.getElementById("welcomeOverlay");
+  const startBtn = document.getElementById("startBtn");
+  const howToBtn = document.getElementById("howToBtn");
+  const howToPanel = document.getElementById("howToPanel");
+
+  let gameStarted = false;
+
+  const startGame = () => {
+    if (gameStarted) return;
+    gameStarted = true;
+    if (welcomeOverlay) welcomeOverlay.classList.add("hidden");
+    gameEngine.start();
+    canvas.focus();
+  };
+
+  if (startBtn) {
+    startBtn.addEventListener("click", startGame);
+  }
+
+  if (howToBtn && howToPanel) {
+    howToBtn.addEventListener("click", () => {
+      const showing = howToPanel.classList.toggle("show");
+      howToBtn.textContent = showing ? "Hide How to Play" : "How to Play";
+    });
+  }
+
   
   // World setup (tilemap + camera)
   
@@ -224,6 +251,5 @@ ASSET_MANAGER.downloadAll(() => {
     removeFromWorld: false
   });
 
-  // Start the game loop
-  gameEngine.start();
+  // Start the game loop when the player clicks "Start"
 });

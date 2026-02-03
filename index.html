@@ -45,6 +45,26 @@
             autofocus>
     </canvas>
 
+    <!-- Welcome screen -->
+    <div id="welcomeOverlay">
+      <div class="panel">
+        <p class="eyebrow">Welcome to</p>
+        <h1>The Lost Barbarian</h1>
+        <p class="subtitle">Collect keys. Clear enemies. Find your way out.</p>
+
+        <div class="buttonRow">
+          <button id="startBtn" type="button" class="primary">Start</button>
+          <button id="howToBtn" type="button" class="ghost">How to Play</button>
+        </div>
+
+        <ul id="howToPanel" class="instructions">
+          <li>Move with WASD or Arrow Keys</li>
+          <li>Attack with 1</li>
+          <li>Win by collecting 3 keys and defeating all enemies</li>
+        </ul>
+      </div>
+    </div>
+
     <!-- Game over screen -->
     <div id="gameOverOverlay">
       <div class="panel">
@@ -60,6 +80,8 @@
         <p>Press R to restart</p>
       </div>
     </div>
+
+    
   </div>
 </body>
 </html>
