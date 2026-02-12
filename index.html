@@ -1,71 +1,140 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <meta charset="utf-8">
+  <meta charset="utf-8" />
   <title>Game Project</title>
 
-  <!-- Engine scripts -->
+  <!-- Engine core (required by everything below) -->
   <script src="./engine/assetmanager.js"></script>
   <script src="./engine/timer.js"></script>
   <script src="./engine/gameengine.js"></script>
   <script src="./engine/util.js"></script>
 
-  <!-- Game systems -->
+  <!-- World systems (used by main.js when building the level) -->
   <script src="./game/camera.js"></script>
   <script src="./game/tilemap.js"></script>
+
+  <!-- Player + combat -->
   <script src="./game/player.js"></script>
 
-  <!-- Enemy factory and logic -->
+  <!-- Enemies (EnemyCreator builds Enemy definitions; Enemy handles runtime behavior) -->
   <script src="./game/enemy_creator.js"></script>
   <script src="./game/enemy.js"></script>
+  <script src="./game/projectile.js"></script>
 
-  <!-- Collectible keys -->
+  <!-- Game progression + pickups -->
+  <script src="./game/objectives.js"></script>
+  <script src="./game/scroll.js"></script>
   <script src="./game/key.js"></script>
 
-  <!-- Entry point -->
+  <!-- UI (updates DOM elements defined in this file) -->
+  <script src="./game/hud.js"></script>
+
+  <!-- Entry point (queues assets, builds map/entities, wires overlays) -->
   <script src="./main.js"></script>
 
-  <link rel="stylesheet" href="./styles/styles.css">
-
-
-     
+  <link rel="stylesheet" href="./styles/styles.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Uncial+Antiqua&display=swap" rel="stylesheet" />
 </head>
 
 <body>
-  <!-- Debug toggle -->
+  <!-- Debug / fullscreen buttons (wired in main.js) -->
   <button id="debugToggle" type="button">Debug: OFF</button>
+  <button id="fullscreenBtn" type="button">Fullscreen</button>
 
   <div id="gameContainer">
-    <!-- Main game canvas -->
-    <canvas id="gameWorld"
-            width="1280"
-            height="720"
-            style="background: black; border: 3px solid #222; image-rendering: pixelated;"
-            tabindex="0"
-            autofocus>
-    </canvas>
+    <!-- Canvas (main render target; must exist for main.js to init the engine) -->
+    <canvas
+      id="gameWorld"
+      width="1280"
+      height="720"
+      style="background: black; border: 3px solid #222; image-rendering: pixelated;"
+      tabindex="0"
+      autofocus
+    ></canvas>
 
-    <!-- Welcome screen -->
-    <div id="welcomeOverlay">
-      <div class="panel">
-        <p class="eyebrow">Welcome to</p>
-        <h1>The Lost Barbarian</h1>
-        <p class="subtitle">Collect keys. Clear enemies. Find your way out.</p>
+    <!-- Objective bar (HUD writes here via ObjectiveManager + HUD) -->
+    <div class="objective-bar">
+      <div id="hudObjectiveText" class="objective-text">Objective: ...</div>
+      <div id="hudStoryToast" class="objective-toast"></div>
+    </div>
 
-        <div class="buttonRow">
-          <button id="startBtn" type="button" class="primary">Start</button>
-          <button id="howToBtn" type="button" class="ghost">How to Play</button>
+    <!-- Story overlay (opened/closed by ScrollStoryPickup in scroll.js) -->
+    <div id="storyOverlay" class="story-overlay">
+      <div class="story-card">
+        <img
+          class="story-bg"
+          src="assets/images/scrolls/scroll_page.png"
+          alt="Scroll page"
+          draggable="false"
+        />
+
+        <div class="story-content">
+          <div class="story-title" id="storyTitle">The Lost Barbarian</div>
+
+          <div class="story-text" id="storyText">
+            <!-- Filled by scroll.js -->
+          </div>
+
+          <div class="story-actions">
+            <button id="storyCloseBtn" class="menu-btn story-btn" type="button">
+              Continue
+            </button>
+          </div>
         </div>
-
-        <ul id="howToPanel" class="instructions">
-          <li>Move with WASD or Arrow Keys</li>
-          <li>Attack with 1</li>
-          <li>Win by collecting 3 keys and defeating all enemies</li>
-        </ul>
       </div>
     </div>
 
-    <!-- Game over screen -->
+    <!-- HUD (DOM overlay; updated each tick by HUD in hud.js) -->
+    <div id="hud">
+      <div class="hud-panel">
+        <!-- Health -->
+        <div class="hud-row">
+          <img id="hudHeart" src="assets/images/ui_overlay/heart.png" alt="health" />
+
+          <div class="hud-hp">
+            <div class="hud-hp-text" id="hudHpText">HP: 10/10</div>
+
+            <div class="hud-bar">
+              <div class="hud-bar-fill" id="hudHpFill" style="width: 100%"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Keys -->
+        <div class="hud-row hud-keys-row">
+          <img id="hudKeyIcon" src="assets/images/ui_overlay/key.png" alt="keys" />
+          <div class="hud-keys" id="hudKeysText">Keys: 0/3</div>
+        </div>
+
+        <!-- Attack 2 cooldown -->
+        <div class="hud-row hud-atk2-row">
+          <div class="hud-atk2">
+            <div class="hud-atk2-text" id="hudAtk2Text">Attack 2: READY</div>
+
+            <div class="hud-bar hud-bar-blue">
+              <div class="hud-bar-fill hud-bar-fill-blue" id="hudAtk2Fill" style="width: 100%"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Welcome screen (main.js transitions this out when PLAY is clicked) -->
+    <div id="welcomeOverlay">
+      <div class="welcome-menu">
+        <div class="welcome-title">The Lost Barbarian</div>
+
+        <div class="welcome-buttons">
+          <button id="playBtn" class="menu-btn" type="button">PLAY</button>
+          <button id="levelsBtn" class="menu-btn" type="button">LEVELS</button>
+          <button id="howToBtn" class="menu-btn" type="button">HOW TO PLAY</button>
+          <button id="creditsBtn" class="menu-btn" type="button">CREDITS</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Game over (shown by gameEngine.triggerGameOver in main.js) -->
     <div id="gameOverOverlay">
       <div class="panel">
         <h1>GAME OVER</h1>
@@ -73,15 +142,35 @@
       </div>
     </div>
 
-    <!-- Win screen -->
+    <!-- Win (shown by gameEngine.triggerWin in main.js) -->
     <div id="winOverlay">
-      <div class="panel">
-        <h1>YOU WIN!</h1>
-        <p>Press R to restart</p>
+      <div class="win-menu">
+        <div class="win-title">LEVEL COMPLETE</div>
+
+        <div class="win-buttons">
+          <button id="restartBtn" class="menu-btn" type="button">RESTART</button>
+          <button id="nextBtn" class="menu-btn" type="button">NEXT</button>
+        </div>
+
+        <div class="win-hint">Press R to restart</div>
       </div>
     </div>
 
-    
+    <!-- Under Construction (used by NEXT + menu buttons in main.js) -->
+    <div id="underConstructionOverlay">
+      <div class="uc-menu">
+        <img
+          class="uc-image"
+          src="assets/images/ui_overlay/under_construction.png"
+          alt="Under construction"
+        />
+
+        <div class="uc-buttons">
+          <button id="ucBackBtn" class="menu-btn" type="button">BACK</button>
+          <button id="ucRestartBtn" class="menu-btn" type="button">RESTART</button>
+        </div>
+      </div>
+    </div>
   </div>
 </body>
 </html>
