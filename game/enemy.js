@@ -54,6 +54,7 @@ class Enemy {
 
     this.dead = false;
     this.removeFromWorld = false;
+    this.lootDropped = false;
 
     // Used for sprite flipping
     this.facing = "left";
@@ -230,6 +231,7 @@ class Enemy {
       const cfg = this.ANIM.die;
       this.animElapsed += dt;
       if (this.animElapsed >= cfg.frames * cfg.ft) {
+        this.dropLootOnce();
         this.removeFromWorld = true;
       }
       return;
@@ -314,6 +316,35 @@ class Enemy {
       this.def.onUpdate(this, dt);
     }
   }
+
+  dropLootOnce() {
+    if (this.lootDropped) return;
+    this.lootDropped = true;
+  
+    const add = this.game.addWorldEntity
+      ? this.game.addWorldEntity.bind(this.game)
+      : this.game.addEntity.bind(this.game);
+  
+    // Either/or drop:
+    // 25% heart, otherwise coin.
+    const heartChance = 0.35;
+  
+    if (typeof HeartPickup === "function" && Math.random() < heartChance) {
+      add(new HeartPickup(
+        this.game, this.AM, this.camera, this.player,
+        this.x, this.y,
+        { size: 55, radius: 26 }
+      ));
+    } else if (typeof CoinPickup === "function") {
+      add(new CoinPickup(
+        this.game, this.AM, this.camera, this.player,
+        this.x, this.y,
+        { size: 22, radius: 26, frameTime: 0.1 }
+      ));
+    }
+  }
+  
+
 
   // Rendering + debug visuals
   draw(ctx) {

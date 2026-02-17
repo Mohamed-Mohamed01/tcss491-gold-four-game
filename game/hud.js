@@ -15,6 +15,7 @@ class HUD {
     this.hpTextEl = document.getElementById("hudHpText");
     this.hpFillEl = document.getElementById("hudHpFill");
     this.keysTextEl = document.getElementById("hudKeysText");
+    this.coinsTextEl = document.getElementById("hudCoinsText");
 
     // Attack 2 cooldown UI
     this.atk2TextEl = document.getElementById("hudAtk2Text");
@@ -54,6 +55,12 @@ class HUD {
 
     if (this.keysTextEl) {
       this.keysTextEl.textContent = `Keys: ${keys}/${req}`;
+    }
+
+    // ----- Coins -----
+    const coins = this.game.coinsCollected || 0;
+    if (this.coinsTextEl) {
+      this.coinsTextEl.textContent = `Coins: ${coins}`;
     }
 
     // ----- Attack 2 Cooldown -----

@@ -145,6 +145,8 @@ ASSET_MANAGER.queueDownload("assets/images/tiles/flower12.png");
 ASSET_MANAGER.queueDownload("assets/images/ui_overlay/heart.png");
 ASSET_MANAGER.queueDownload("assets/images/scrolls/scrolls.png");
 ASSET_MANAGER.queueDownload("assets/images/keys_sprites/gold_key.png");
+ASSET_MANAGER.queueDownload("assets/images/resources_sprite/coin_sprite.png");
+ASSET_MANAGER.queueDownload("assets/images/resources_sprite/heart.png");
 
 // Player
 ASSET_MANAGER.queueDownload("assets/images/player_idle/idle_up.png");
@@ -250,6 +252,7 @@ ASSET_MANAGER.downloadAll(async () => {
 
   gameEngine.requiredKeys = 3;
   gameEngine.keysCollected = 0;
+  gameEngine.coinsCollected = 0;
 
   // Called from gameplay when player dies (Player / Enemy combat logic)
   gameEngine.triggerGameOver = function () {
@@ -512,10 +515,35 @@ ASSET_MANAGER.downloadAll(async () => {
   gameEngine.addEntity(hud);
 
 
-  // Tile map draw hook (TileMap.draw in game/tilemap.js)
-  gameEngine.addEntity({
+    // Tile map draw hook (TileMap.draw in game/tilemap.js)
+  // IMPORTANT: keep this as the "background draw entity".
+  // We'll insert runtime-spawned world entities (like loot drops) BEFORE this,
+  // so they draw above the map but below player/enemies if your engine draws in reverse.
+  const tilemapDrawEntity = {
+    tag: "tilemap_draw",
     update: () => {},
     draw: (ctx) => tileMap.draw(ctx, camera),
     removeFromWorld: false
-  });
+  };
+
+  // Helper: add an entity into the "world layer" (above map, not behind it)
+  gameEngine.addWorldEntity = function (ent) {
+    const ents = this.entities;
+    if (!Array.isArray(ents)) {
+      this.addEntity(ent);
+      return;
+    }
+
+    const mapIndex = ents.findIndex(e => e && e.tag === "tilemap_draw");
+    if (mapIndex === -1) {
+      this.addEntity(ent);
+      return;
+    }
+
+    // Insert BEFORE tilemap draw entity
+    ents.splice(mapIndex, 0, ent);
+  };
+
+  gameEngine.addEntity(tilemapDrawEntity);
+
 });
