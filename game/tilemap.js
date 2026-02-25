@@ -123,15 +123,9 @@ class TileMap {
   _buildTilesetsFromMap(map) {
     // External tilesets: tileset NAME -> AssetManager key (queued in main.js)
     this.tilesetImageByName = {
-      grass: "assets/images/tiles/grass.png",
-      dirt1: "assets/images/tiles/dirt1.png",
-      dirt2: "assets/images/tiles/dirt2.png",
-      dirt3: "assets/images/tiles/dirt3.png",
-      dirt4: "assets/images/tiles/dirt4.png",
-      dirt5: "assets/images/tiles/dirt5.png",
-      walls: "assets/images/tiles/walls.png",
-
       FieldsTileset: "assets/images/tiles/FieldsTileset.png",
+      WaterTileset: "assets/images/tiles/WaterTileset.png",
+
     };
 
     const raw = map.tilesets ?? [];

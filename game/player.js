@@ -338,8 +338,8 @@ class Player {
 
 
     // Attack input
-    const atk1 = keys["1"] || keys["Numpad1"];
-    const atk2 = keys["2"] || keys["Numpad2"];
+    const atk1 = keys[" "] || keys["Space"] || keys["Spacebar"];
+    const atk2 = keys["y"] || keys["Y"];
 
     if (atk2 && !this.attack2Held && !this.attacking && !this.attacking2 && this.attack2Cooldown === 0) {
       this.startAttack2();

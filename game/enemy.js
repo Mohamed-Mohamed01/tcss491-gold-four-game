@@ -63,6 +63,9 @@ class Enemy {
     this.attackDidHit = false;
     this.attackCooldown = 0;
 
+    // Small collision radius for spacing between enemies
+    this.FOOT_RADIUS = 12;
+
     // Random spawn location away from player
     const spawn = this.pickRandomSpawn(S.minFromPlayer ?? 240);
     this.x = spawn.x;
@@ -85,6 +88,42 @@ class Enemy {
     const w = 26;
     const h = 26;
     return { left: x - w / 2, top: y - h / 2, w, h };
+  }
+
+  // Keep a small buffer between enemies so they don't stack
+  applySeparation() {
+    const buffer = this.def?.stats?.separationRadius ?? 34;
+    const strength = this.def?.stats?.separationStrength ?? 0.8;
+
+    let ax = 0;
+    let ay = 0;
+
+    for (const ent of this.game.entities) {
+      if (!ent || ent === this || ent.tag !== "enemy" || ent.removeFromWorld) continue;
+
+      const dx = this.x - ent.x;
+      const dy = this.y - ent.y;
+      const dist = Math.hypot(dx, dy);
+
+      if (dist > 0 && dist < buffer) {
+        const push = (buffer - dist) / buffer;
+        ax += (dx / dist) * push;
+        ay += (dy / dist) * push;
+      }
+    }
+
+    const mag = Math.hypot(ax, ay);
+    if (mag === 0) return;
+
+    ax /= mag;
+    ay /= mag;
+
+    const step = strength;
+    const tryX = this.x + ax * step;
+    const tryY = this.y + ay * step;
+
+    this.x = tryX;
+    this.y = tryY;
   }
 
   // Chooses a random tile away from the player
@@ -308,6 +347,9 @@ class Enemy {
     } else {
       this.state = "idle";
     }
+
+    // Apply separation after movement to prevent stacking
+    this.applySeparation();
 
     this.animElapsed += dt;
 

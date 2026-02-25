@@ -76,9 +76,9 @@ class HUD {
 
     if (this.atk2TextEl) {
       if (pctReady >= 1) {
-        this.atk2TextEl.textContent = "Attack 2: READY";
+        this.atk2TextEl.textContent = "Attack 2 (Y): READY";
       } else {
-        this.atk2TextEl.textContent = `Attack 2: ${cdRem.toFixed(1)}s`;
+        this.atk2TextEl.textContent = `Attack 2 (Y): ${cdRem.toFixed(1)}s`;
       }
     }
 

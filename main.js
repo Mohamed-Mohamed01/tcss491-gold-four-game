@@ -14,14 +14,14 @@ const ASSET_MANAGER = new AssetManager();
 
 // Tiles / map
 ASSET_MANAGER.queueDownload("assets/images/tiles/grass.png");
-ASSET_MANAGER.queueDownload("assets/images/tiles/dirt1.png");
-ASSET_MANAGER.queueDownload("assets/images/tiles/dirt2.png");
-ASSET_MANAGER.queueDownload("assets/images/tiles/dirt3.png");
-ASSET_MANAGER.queueDownload("assets/images/tiles/dirt4.png");
-ASSET_MANAGER.queueDownload("assets/images/tiles/dirt5.png");
 ASSET_MANAGER.queueDownload("assets/images/tiles/Dirt6.png");
 ASSET_MANAGER.queueDownload("assets/images/tiles/walls.png");
 ASSET_MANAGER.queueDownload("assets/images/tiles/FieldsTileset.png");
+ASSET_MANAGER.queueDownload("assets/images/tiles/house.png");
+ASSET_MANAGER.queueDownload("assets/images/tiles/WaterTileset.png");
+
+
+
 
 // Ground clutter
 ASSET_MANAGER.queueDownload("assets/images/tiles/grass1.png");
@@ -207,7 +207,7 @@ ASSET_MANAGER.downloadAll(async () => {
    
 
   // Under Construction overlay used by:
-  // - WELCOME menu buttons (LEVELS / HOW TO / CREDITS)
+  // - WELCOME menu buttons (LEVELS / CREDITS)
   // - WIN screen NEXT button
   function showUnderConstruction() {
     const welcome = document.getElementById("welcomeOverlay");
@@ -226,16 +226,28 @@ ASSET_MANAGER.downloadAll(async () => {
 
   const underConstructionOverlay = document.getElementById("underConstructionOverlay");
   const ucBackBtn = document.getElementById("ucBackBtn");
-  const ucRestartBtn = document.getElementById("ucRestartBtn");
+
+  const howToOverlay = document.getElementById("howToOverlay");
+  const howToBackBtn = document.getElementById("howToBackBtn");
 
   if (restartBtn) restartBtn.addEventListener("click", () => window.location.reload());
-  if (ucRestartBtn) ucRestartBtn.addEventListener("click", () => window.location.reload());
 
   if (nextBtn) nextBtn.addEventListener("click", () => showUnderConstruction());
 
   if (ucBackBtn) {
     ucBackBtn.addEventListener("click", () => {
       if (underConstructionOverlay) underConstructionOverlay.style.display = "none";
+
+      const welcome = document.getElementById("welcomeOverlay");
+      if (welcome) welcome.style.display = "flex";
+
+      canvas.focus();
+    });
+  }
+
+  if (howToBackBtn) {
+    howToBackBtn.addEventListener("click", () => {
+      if (howToOverlay) howToOverlay.style.display = "none";
 
       const welcome = document.getElementById("welcomeOverlay");
       if (welcome) welcome.style.display = "flex";
@@ -342,7 +354,14 @@ ASSET_MANAGER.downloadAll(async () => {
 
   if (playBtn) playBtn.addEventListener("click", startGame);
   if (levelsBtn) levelsBtn.addEventListener("click", () => showUnderConstruction());
-  if (howToBtn) howToBtn.addEventListener("click", () => showUnderConstruction());
+  if (howToBtn) {
+    howToBtn.addEventListener("click", () => {
+      const welcome = document.getElementById("welcomeOverlay");
+      if (welcome) welcome.style.display = "none";
+      if (howToOverlay) howToOverlay.style.display = "flex";
+      canvas.focus();
+    });
+  }
   if (creditsBtn) creditsBtn.addEventListener("click", () => showUnderConstruction());
 
 

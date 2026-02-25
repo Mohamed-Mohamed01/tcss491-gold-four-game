@@ -35,7 +35,7 @@
   <script src="./main.js"></script>
 
   <link rel="stylesheet" href="./styles/styles.css" />
-  <link href="https://fonts.googleapis.com/css2?family=Uncial+Antiqua&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Marcellus&family=Merriweather:wght@300;400;700&display=swap" rel="stylesheet" />
 </head>
 
 <body>
@@ -117,7 +117,7 @@
         <!-- Attack 2 cooldown -->
         <div class="hud-row hud-atk2-row">
           <div class="hud-atk2">
-            <div class="hud-atk2-text" id="hudAtk2Text">Attack 2: READY</div>
+            <div class="hud-atk2-text" id="hudAtk2Text">Attack 2 (Y): READY</div>
 
             <div class="hud-bar hud-bar-blue">
               <div class="hud-bar-fill hud-bar-fill-blue" id="hudAtk2Fill" style="width: 100%"></div>
@@ -137,6 +137,67 @@
           <button id="levelsBtn" class="menu-btn" type="button">LEVELS</button>
           <button id="howToBtn" class="menu-btn" type="button">HOW TO PLAY</button>
           <button id="creditsBtn" class="menu-btn" type="button">CREDITS</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- How To Play overlay -->
+    <div id="howToOverlay" class="howto-overlay">
+      <div class="howto-card">
+        <div class="howto-title">How To Play</div>
+
+        <div class="howto-body">
+          <div class="howto-section">
+            <div class="howto-heading">Goal</div>
+            <div class="howto-text">Find the three keys and defeat all guardians.</div>
+          </div>
+
+          <div class="howto-section">
+            <div class="howto-heading">Controls</div>
+            <div class="howto-list">
+              <div class="howto-row">
+                <span class="howto-label">Move</span>
+                <span class="howto-keys">
+                  <span class="keycap">W</span>
+                  <span class="keycap">A</span>
+                  <span class="keycap">S</span>
+                  <span class="keycap">D</span>
+                  <span class="keycap">↑</span>
+                  <span class="keycap">←</span>
+                  <span class="keycap">↓</span>
+                  <span class="keycap">→</span>
+                </span>
+              </div>
+              <div class="howto-row">
+                <span class="howto-label">Attack 1</span>
+                <span class="howto-keys">
+                  <span class="keycap">Space</span>
+                </span>
+              </div>
+              <div class="howto-row">
+                <span class="howto-label">Attack 2 (AoE)</span>
+                <span class="howto-keys">
+                  <span class="keycap">Y</span>
+                </span>
+              </div>
+              <div class="howto-row">
+                <span class="howto-label">Fullscreen</span>
+                <span class="howto-keys">
+                  <span class="keycap">F</span>
+                </span>
+              </div>
+              <div class="howto-row">
+                <span class="howto-label">Restart (Game Over/Win)</span>
+                <span class="howto-keys">
+                  <span class="keycap">R</span>
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="howto-actions">
+          <button id="howToBackBtn" class="menu-btn" type="button">BACK</button>
         </div>
       </div>
     </div>
@@ -174,7 +235,6 @@
 
         <div class="uc-buttons">
           <button id="ucBackBtn" class="menu-btn" type="button">BACK</button>
-          <button id="ucRestartBtn" class="menu-btn" type="button">RESTART</button>
         </div>
       </div>
     </div>
