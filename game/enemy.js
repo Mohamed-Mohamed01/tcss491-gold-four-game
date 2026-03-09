@@ -367,17 +367,23 @@ class Enemy {
       ? this.game.addWorldEntity.bind(this.game)
       : this.game.addEntity.bind(this.game);
   
-    // Either/or drop:
-    // 25% heart, otherwise coin.
-    const heartChance = 0.35;
-  
-    if (typeof HeartPickup === "function" && Math.random() < heartChance) {
-      add(new HeartPickup(
-        this.game, this.AM, this.camera, this.player,
-        this.x, this.y,
-        { size: 55, radius: 26 }
-      ));
-    } else if (typeof CoinPickup === "function") {
+    // Boss level loot rule:
+    // - no coins
+    // - 50% chance heart
+    if (this.game?.currentLevelIndex === 2) {
+      if (typeof HeartPickup === "function" && Math.random() < 0.50) {
+        add(new HeartPickup(
+          this.game, this.AM, this.camera, this.player,
+          this.x + 8, this.y + 6,
+          { size: 34, radius: 26 }
+        ));
+      }
+      return;
+    }
+
+    // Non-boss levels: keep coin drops (respect global cap)
+    const max = this.game?.maxCoinsAvailable ?? 17;
+    if (typeof CoinPickup === "function" && (this.game?.coinsCollected ?? 0) < max) {
       add(new CoinPickup(
         this.game, this.AM, this.camera, this.player,
         this.x, this.y,

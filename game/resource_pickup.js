@@ -87,7 +87,19 @@ class CoinPickup extends ResourcePickup {
 
   onPickup() {
     if (typeof this.game.coinsCollected !== "number") this.game.coinsCollected = 0;
+    const max = this.game.maxCoinsAvailable ?? 17;
+    if (this.game.coinsCollected >= max) {
+      this.removeFromWorld = true;
+      return;
+    }
     this.game.coinsCollected += 1;
+
+    // New Code
+    // Play coin pickup sound (short and subtle)
+    if (typeof this.game.playSound === "function") {
+      this.game.playSound("assets/sounds/coin_pickup.mp3", 0.5);
+    }
+
     this.removeFromWorld = true;
   }
 

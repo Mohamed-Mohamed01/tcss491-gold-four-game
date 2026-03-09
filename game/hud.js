@@ -24,6 +24,12 @@ class HUD {
     // Objectives + story UI
     this.objTextEl = document.getElementById("hudObjectiveText");
     this.storyToastEl = document.getElementById("hudStoryToast");
+
+    // New Code
+    // Minimap HUD overlay (top-left, draws on HUD layer)
+    this.minimap = (typeof Minimap === "function")
+      ? new Minimap(game, game?.tileMap, game?.camera, player)
+      : null;
   }
 
   update() {
@@ -89,8 +95,14 @@ class HUD {
     }
 
     if (this.objTextEl) {
-      this.objTextEl.textContent =
-        this.game.objectives ? this.game.objectives.getText() : "";
+      const hint = this.game.contextHint || "";
+      if (hint) {
+        this.objTextEl.textContent = hint;
+      } else if (this.game.exitUnlocked) {
+        this.objTextEl.textContent = "Objective: Find the exit";
+      } else {
+        this.objTextEl.textContent = this.game.objectives ? this.game.objectives.getText() : "";
+      }
     }
 
     // ----- Story Toast -----
@@ -100,10 +112,16 @@ class HUD {
       this.storyToastEl.textContent = t;
       this.storyToastEl.style.display = t ? "block" : "none";
     }
+
+    // New Code
+    if (this.minimap) this.minimap.update();
   }
 
   draw() {
-    // Intentionally empty:
-    // HUD is DOM-based and does not render on canvas.
+    // New Code
+    // Draw minimap on the HUD layer (after world draw).
+    if (this.minimap && this.game?.ctx) {
+      this.minimap.draw(this.game.ctx);
+    }
   }
 }

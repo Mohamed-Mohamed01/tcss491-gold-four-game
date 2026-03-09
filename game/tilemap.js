@@ -1,3 +1,4 @@
+// new code time:8:55
 // game/tilemap.js
 // TileMap (Tiled TMJ):
 // - Loads a Tiled .tmj JSON map (main.js calls loadFromTiledTMJ)
@@ -9,6 +10,12 @@
 // Tileset support:
 // 1) External tilesets (.tsx / spritesheet): map tileset NAME -> AssetManager key queued in main.js
 // 2) Collection-of-images tilesets: each tile has its own image path; we normalize to AssetManager keys
+//
+// NOTE (for water blocking via tile properties):
+// - This file can read per-tile custom properties (ex: blocked=true) ONLY if the tileset data
+//   is embedded in the TMJ as JSON (so map.tilesets[] contains a "tiles" array with properties).
+// - If your tileset is referenced via "source": "...tsx", TMJ usually won’t include per-tile properties here.
+//   In that case, use embedded tilesets or a JSON tileset export so properties are available.
 
 class TileMap {
   constructor(game, assetManager) {
@@ -41,12 +48,24 @@ class TileMap {
 
     // Cache: gid -> { ts, localId }
     this._gidCache = new Map();
+
+    // NEW: raw tilesets by name (for per-tile custom properties like blocked=true)
+    this._rawTilesetsByName = new Map();
   }
 
   // Loads TMJ JSON from URL and builds layers/tilesets/colliders/spawn points
   async loadFromTiledTMJ(url) {
     const map = await fetch(url).then((r) => r.json());
     this._map = map;
+
+    // NEW: build lookup of raw tilesets by name (only works if tileset data is embedded in TMJ)
+    this._rawTilesetsByName = new Map();
+    for (const ts of map.tilesets ?? []) {
+      const name =
+        ts.name ||
+        (ts.source ? ts.source.split("/").pop().replace(".tsx", "") : "tileset");
+      this._rawTilesetsByName.set(name, ts);
+    }
 
     // Dimensions
     this.COLS = map.width;
@@ -83,18 +102,46 @@ class TileMap {
 
     this.tiledColliders = (collidersLayer?.objects ?? []).map((o) => {
       const propType = (o.properties ?? []).find((p) => p.name === "type")?.value;
+      const blockedProp = (o.properties ?? []).find((p) => p.name === "blocked")?.value === true;
+
       return {
+        name: o.name || "",
         x: o.x,
         y: o.y,
         w: o.width ?? 0,
         h: o.height ?? 0,
         type: propType || "solid",
+        blockedProp,
+        // Phase A: arena entrance blockers can start inactive, then enabled later.
+        active: blockedProp ? false : true
       };
     });
+
+    // Phase A: blocked areas from any object layer (not just Colliders)
+    this.blockedAreas = [];
+    for (const layer of map.layers ?? []) {
+      if (layer.type !== "objectgroup") continue;
+      for (const o of layer.objects ?? []) {
+        const blockedProp = (o.properties ?? []).find((p) => p.name === "blocked")?.value === true;
+        if (!blockedProp) continue;
+
+        this.blockedAreas.push({
+          name: o.name || "",
+          x: o.x,
+          y: o.y,
+          w: o.width ?? 0,
+          h: o.height ?? 0,
+          active: false
+        });
+      }
+    }
 
     // Point objects used as spawn markers (used by main.js to place keys/scrolls)
     this.keySpawns = [];    // [{ name, x, y }]
     this.scrollSpawns = []; // [{ name, x, y }]
+
+    // Exit markers (for minimap + optional logic)
+    this.exitSpawns = [];   // [{ name, x, y }]
 
     const anyObjectLayers = (map.layers ?? []).filter(l => l.type === "objectgroup");
 
@@ -102,12 +149,21 @@ class TileMap {
       for (const o of (ol.objects ?? [])) {
         if (!o.point) continue;
 
-        if (o.name === "key1" || o.name === "key2" || o.name === "key3") {
-          this.keySpawns.push({ name: o.name, x: o.x, y: o.y });
+        const rawName = o.name || "";
+        if (rawName === "key1" || rawName === "key2" || rawName === "key3" || rawName.toLowerCase().startsWith("key")) {
+          this.keySpawns.push({ name: rawName, x: o.x, y: o.y });
         }
 
         if (o.name === "story_scroll") {
           this.scrollSpawns.push({ name: o.name, x: o.x, y: o.y });
+        }
+
+        // Accept common exit names (ExitPoint, exit, Exit, etc.)
+        const name = rawName.toLowerCase();
+        if (name.includes("exit")) {
+          const px = o.point ? o.x : (o.x + (o.width || 0) / 2);
+          const py = o.point ? o.y : (o.y + (o.height || 0) / 2);
+          this.exitSpawns.push({ name: rawName || "exit", x: px, y: py });
         }
       }
     }
@@ -125,7 +181,7 @@ class TileMap {
     this.tilesetImageByName = {
       FieldsTileset: "assets/images/tiles/FieldsTileset.png",
       WaterTileset: "assets/images/tiles/WaterTileset.png",
-
+      FenceTileset: "assets/images/tiles/FenceTileset.png"
     };
 
     const raw = map.tilesets ?? [];
@@ -224,10 +280,60 @@ class TileMap {
     return out;
   }
 
+  // NEW: Get the raw tile definition for a gid (so we can read tile custom properties)
+  _getRawTileDefForGid(gidRaw) {
+    if (!gidRaw) return null;
+
+    // strip flip flags
+    const FLIP_H = 0x80000000;
+    const FLIP_V = 0x40000000;
+    const FLIP_D = 0x20000000;
+    const gid = gidRaw & ~(FLIP_H | FLIP_V | FLIP_D);
+
+    const res = this._resolveGid(gid);
+    if (!res) return null;
+
+    const { ts, localId } = res;
+
+    const rawTs = this._rawTilesetsByName?.get(ts.name);
+    if (!rawTs) return null;
+
+    // If tileset is external via .tsx, TMJ often won’t have tiles[] here.
+    if (!Array.isArray(rawTs.tiles)) return null;
+
+    return rawTs.tiles.find((t) => t.id === localId) || null;
+  }
+
+  // NEW: Returns true if the tile under (x,y) has custom property blocked=true
+  _isBlockedByTileProperty(x, y) {
+    // water tiles are on the Ground tile layer in your setup
+    const layer = this.layers["Ground"];
+    if (!layer || !layer.data) return false;
+
+    const col = Math.floor(x / this.TILE_SIZE);
+    const row = Math.floor(y / this.TILE_SIZE);
+    if (col < 0 || row < 0 || col >= this.COLS || row >= this.ROWS) return true;
+
+    const idx = row * this.COLS + col;
+    const gidRaw = layer.data[idx];
+    if (!gidRaw || gidRaw === 0) return false;
+
+    const tileDef = this._getRawTileDefForGid(gidRaw);
+    if (!tileDef) return false;
+
+    const blockedProp = (tileDef.properties || []).find((p) => p.name === "blocked");
+    return blockedProp?.value === true;
+  }
+
   // Returns true if a point hits any "solid" collider rectangle
   _pointHitsSolidCollider(x, y) {
     for (const r of this.tiledColliders) {
       if (r.type !== "solid") continue;
+      if (r.active === false) continue;
+      if (x >= r.x && x < r.x + r.w && y >= r.y && y < r.y + r.h) return true;
+    }
+    for (const r of this.blockedAreas) {
+      if (!r.active) continue;
       if (x >= r.x && x < r.x + r.w && y >= r.y && y < r.y + r.h) return true;
     }
     return false;
@@ -236,7 +342,57 @@ class TileMap {
   // Main collision query used by Player/Enemy/Projectile movement
   isBlockedAtWorld(x, y) {
     if (x < 0 || y < 0 || x >= this.WORLD_W || y >= this.WORLD_H) return true;
+
+    // NEW: tile-based blocking (ex: water tiles with blocked=true)
+    if (this._isBlockedByTileProperty(x, y)) return true;
+
+    // Existing solid rectangles
     return this._pointHitsSolidCollider(x, y);
+  }
+
+  // Finds the first object with a given name across ALL objectgroup layers
+  getObjectByName(name) {
+    if (!this._map) return null;
+    for (const layer of this._map.layers ?? []) {
+      if (layer.type !== "objectgroup") continue;
+      for (const o of layer.objects ?? []) {
+        if (o.name === name) return o;
+      }
+    }
+    return null;
+  }
+
+  // Phase A: enable colliders marked with blocked=true in Tiled
+  activateBlockedColliders() {
+    for (const r of this.tiledColliders) {
+      if (r.blockedProp) r.active = true;
+    }
+  }
+
+  // Phase A: enable blocked areas from any object layer
+  activateBlockedAreas() {
+    for (const r of this.blockedAreas) {
+      r.active = true;
+    }
+  }
+
+  // Optional helper for future phases (activate by name)
+  setColliderActiveByName(name, active = true) {
+    for (const r of this.tiledColliders) {
+      if (r.name === name) r.active = active;
+    }
+  }
+
+  // Convenience: return an AABB for ExitPoint (supports rectangle or point objects)
+  getExitRect() {
+    const o = this.getObjectByName("ExitPoint");
+    if (!o) return null;
+
+    // If it's a point object, give it a default size
+    const w = (o.width && o.width > 0) ? o.width : this.TILE_SIZE;
+    const h = (o.height && o.height > 0) ? o.height : this.TILE_SIZE;
+
+    return { x: o.x, y: o.y, w, h };
   }
 
   // Draws visible tiles + objects based on the current camera viewport
@@ -258,7 +414,7 @@ class TileMap {
     this._drawTileLayer(ctx, camera, this.layers["Decor"], startRow, endRow, startCol, endCol);
 
     // Tile-objects (object layers that store gid-based objects like trees/rocks/etc)
-    this._drawObjectGroup(ctx, camera, "Decor Object");
+    this._drawObjectGroup(ctx, camera, "Decor");
     this._drawObjectGroup(ctx, camera, "Objects");
     this._drawObjectGroup(ctx, camera, "Ground Objects");
 
@@ -346,22 +502,68 @@ class TileMap {
     // Sort by y so objects lower on screen overlap naturally
     const objs = [...(layer.objects || [])].sort((a, b) => (a.y || 0) - (b.y || 0));
 
+    // Helper to draw TILE OBJECTS exactly like Tiled.
+    // In Tiled, tile objects are anchored at (o.x, o.y) = bottom-left.
+    // Rotation happens around that anchor. Drawing uses (0, -h) so the tile sits above the anchor.
+    const drawTiledTileObjectRotated = (ctx, img, o, camX, camY, outW, outH, src) => {
+      const rad = (o.rotation || 0) * Math.PI / 180;
+
+      const anchorX = o.x - camX;
+      const anchorY = o.y - camY;
+
+      ctx.save();
+      ctx.translate(anchorX, anchorY);
+      ctx.rotate(rad);
+
+      if (src) {
+        ctx.drawImage(img, src.sx, src.sy, src.sw, src.sh, 0, -outH, outW, outH);
+      } else {
+        ctx.drawImage(img, 0, -outH, outW, outH);
+      }
+
+      ctx.restore();
+    };
+
     for (const o of objs) {
       // Skip point objects (spawns/markers) and non-tile objects
       if (o.point) continue;
-      if (!o.gid) continue;
+      const hasRotation = !!(o.rotation && o.rotation !== 0);
+
+      // If this is a non-tile object, draw a subtle rotated placeholder box.
+      if (!o.gid) {
+        if (!hasRotation) continue;
+        const rectW = o.width || this.TILE_SIZE;
+        const rectH = o.height || this.TILE_SIZE;
+        const drawX = o.x - camX;
+        const drawY = o.y - camY;
+
+        ctx.save();
+        ctx.strokeStyle = "rgba(255,255,255,0.18)";
+        ctx.lineWidth = 1;
+
+        // Rotate the placeholder around its center.
+        const rad = (o.rotation || 0) * Math.PI / 180;
+        const cx = drawX + rectW / 2;
+        const cy = drawY + rectH / 2;
+        ctx.translate(cx, cy);
+        ctx.rotate(rad);
+        ctx.strokeRect(-rectW / 2, -rectH / 2, rectW, rectH);
+        ctx.restore();
+        continue;
+      }
 
       const res = this._resolveGid(o.gid);
       if (!res) continue;
 
       const { ts, localId } = res;
 
-      // Tile objects are anchored at bottom-left (Tiled convention)
-      const drawX = o.x - camX;
-      const drawY = (o.y - camY) - (o.height || 0);
-
+      // Tile objects (non-rotated) are drawn using top-left at (x, y - height).
+      const baseX = o.x - camX;
+      const baseY = o.y - camY;
       const outW = o.width || this.TILE_SIZE;
       const outH = o.height || this.TILE_SIZE;
+      const drawX = baseX;
+      const drawY = baseY - outH;
 
       if (ts.kind === "collection") {
         const tile = ts.tilesByLocalId.get(localId);
@@ -370,10 +572,28 @@ class TileMap {
         const img = this.AM.getAsset(tile.imageKey);
         if (!img) continue;
 
-        const w = o.width || img.width;
-        const h = o.height || img.height;
+        if (hasRotation) {
+          // rotate around Tiled's anchor (o.x,o.y), not center
+          drawTiledTileObjectRotated(ctx, img, o, camX, camY, outW, outH, null);
+        } else {
+          ctx.drawImage(img, drawX, drawY, outW, outH);
+        }
 
-        ctx.drawImage(img, drawX, drawY, w, h);
+        // Debug markers
+        if (this.game?.debug && hasRotation) {
+          const anchorX = o.x - camX;
+          const anchorY = o.y - camY;
+          ctx.save();
+          ctx.strokeStyle = "rgba(255,255,0,0.9)";
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.moveTo(anchorX - 6, anchorY);
+          ctx.lineTo(anchorX + 6, anchorY);
+          ctx.moveTo(anchorX, anchorY - 6);
+          ctx.lineTo(anchorX, anchorY + 6);
+          ctx.stroke();
+          ctx.restore();
+        }
         continue;
       }
 
@@ -389,7 +609,28 @@ class TileMap {
         const sx = (localId % cols) * tw;
         const sy = Math.floor(localId / cols) * th;
 
-        ctx.drawImage(img, sx, sy, tw, th, drawX, drawY, outW, outH);
+        if (hasRotation) {
+          // rotate around Tiled's anchor (o.x,o.y), not center
+          drawTiledTileObjectRotated(ctx, img, o, camX, camY, outW, outH, { sx, sy, sw: tw, sh: th });
+        } else {
+          ctx.drawImage(img, sx, sy, tw, th, drawX, drawY, outW, outH);
+        }
+
+        // Debug markers
+        if (this.game?.debug && hasRotation) {
+          const anchorX = o.x - camX;
+          const anchorY = o.y - camY;
+          ctx.save();
+          ctx.strokeStyle = "rgba(255,255,0,0.9)";
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.moveTo(anchorX - 6, anchorY);
+          ctx.lineTo(anchorX + 6, anchorY);
+          ctx.moveTo(anchorX, anchorY - 6);
+          ctx.lineTo(anchorX, anchorY + 6);
+          ctx.stroke();
+          ctx.restore();
+        }
         continue;
       }
     }

@@ -29,13 +29,17 @@ class EnemyProjectile {
     this.vx = vx;
     this.vy = vy;
 
+    // Rotation based on velocity so the sprite points along its travel direction.
+    // Dragon projectile art points the wrong way by default, so rotate by 180deg.
+    this.angle = Math.atan2(this.vy, this.vx) + Math.PI;
+
     // Projectile tuning (can be overridden per enemy type)
     this.speed = opts.speed ?? 6.0;
     this.damage = opts.damage ?? 1;
     this.life = opts.life ?? 2.2;
     this.radius = opts.radius ?? 14;
 
-    this.imgPath = "assets/images/enemy3_sprite/projectile.png";
+    this.imgPath = opts.imgPath ?? "assets/images/enemy3_sprite/projectile.png";
     this.tag = "enemy_projectile";
     this.removeFromWorld = false;
 
@@ -72,9 +76,17 @@ class EnemyProjectile {
     }
 
     // Wall collision (TileMap collision system)
-    if (this.map.isBlockedAtWorld(this.x, this.y)) {
-      this.removeFromWorld = true;
-      return;
+    // Projectiles should ignore tile "blocked=true" (water), but still hit solid colliders.
+    if (this.map) {
+      if (this.x < 0 || this.y < 0 || this.x >= this.map.WORLD_W || this.y >= this.map.WORLD_H) {
+        this.removeFromWorld = true;
+        return;
+      }
+
+      if (this.map._pointHitsSolidCollider(this.x, this.y)) {
+        this.removeFromWorld = true;
+        return;
+      }
     }
 
     // Player collision (uses distance + small padding)
@@ -104,24 +116,13 @@ class EnemyProjectile {
       const w = img.width * SCALE;
       const h = img.height * SCALE;
 
-      const dx = sx - w / 2;
-      const dy = sy - h / 2;
-
       ctx.imageSmoothingEnabled = false;
 
-      // Sprite art faces left by default.
-      // If moving right (vx > 0), flip horizontally.
-      const flip = this.vx > 0;
-
-      if (flip) {
-        ctx.save();
-        ctx.translate(dx + w, dy);
-        ctx.scale(-1, 1);
-        ctx.drawImage(img, 0, 0, w, h);
-        ctx.restore();
-      } else {
-        ctx.drawImage(img, dx, dy, w, h);
-      }
+      ctx.save();
+      ctx.translate(sx, sy);
+      ctx.rotate(this.angle);
+      ctx.drawImage(img, -w / 2, -h / 2, w, h);
+      ctx.restore();
 
       // Optional debug visualization
       if (this.game.debug) {

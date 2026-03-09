@@ -16,7 +16,7 @@ class EnemyCreator {
       stats: {
         drawSize: 70,
         speed: 1.5,
-        hp: 3,
+        hp: 1,
         minFromPlayer: 240,
         attackCooldown: 0.9,
         attackHitRadius: 45,
@@ -34,9 +34,9 @@ class EnemyCreator {
 
     zombie: {
       stats: {
-        drawSize: 90,
+        drawSize: 92,
         speed: 1.2,
-        hp: 4,
+        hp: 1,
         minFromPlayer: 240,
         attackCooldown: 1.1,
         attackHitRadius: 48,
@@ -59,7 +59,7 @@ class EnemyCreator {
       stats: {
         drawSize: 60,
         speed: 1.6,
-        hp: 7,
+        hp: 1,
         minFromPlayer: 240,
         hurtRecovery: 0.25,
 
@@ -120,7 +120,119 @@ class EnemyCreator {
           }
         ));
       }
-    }
+    },
+
+    // NEW: Enemy 4 (knight-like)
+    enemy4: {
+      stats: {
+        drawSize: 100,          // adjust if too big/small
+        speed: 1.35,
+        hp: 3,                // tougher than hp:1 enemies
+        minFromPlayer: 240,
+        attackCooldown: 1.0,
+        attackHitRadius: 50,
+        stopDist: 46,
+        attackRange: 62,
+      },
+
+      anim: {
+        idle:   { path: "assets/images/enemy4_sprite/IDLE.png",   frames: 7,  fw: 96, fh: 84, ft: 0.12 },
+        walk:   { path: "assets/images/enemy4_sprite/WALK.png",   frames: 8,  fw: 96, fh: 84, ft: 0.10 },
+        attack: { path: "assets/images/enemy4_sprite/ATTACK.png", frames: 6,  fw: 96, fh: 84, ft: 0.09 },
+        hurt:   { path: "assets/images/enemy4_sprite/HURT.png",   frames: 4,  fw: 96, fh: 84, ft: 0.10 },
+        die:    { path: "assets/images/enemy4_sprite/DEATH.png",  frames: 12, fw: 96, fh: 84, ft: 0.10 },
+      },
+    },
+
+    // NEW: Enemy 5 (archer)
+    
+    enemy5: {
+      stats: {
+        drawSize: 90,
+        speed: 1.45,
+        hp: 3,
+        minFromPlayer: 240,
+        hurtRecovery: 0.20,
+
+        attackCooldown: 1.25,
+        attackHitRadius: -999, // disables melee hit window in Enemy.update
+        attackRange: 360,
+        stopDist: 320,
+        holdInRange: true,
+        invertFlip: false,
+
+        projectileSpeed: 5.2,
+        projectileDamage: 1,
+        projectileLife: 2.0
+      },
+    
+      anim: {
+        idle:   { path: "assets/images/enemy5_sprite/Idle.png",   frames: 7,  fw: 128, fh: 128, ft: 0.12 },
+        walk:   { path: "assets/images/enemy5_sprite/Walk.png",   frames: 8,  fw: 128, fh: 128, ft: 0.10 },
+        attack: { path: "assets/images/enemy5_sprite/Attack.png", frames: 15, fw: 128, fh: 128, ft: 0.07 },
+        hurt:   { path: "assets/images/enemy5_sprite/Hurt.png",   frames: 2,  fw: 128, fh: 128, ft: 0.12 },
+        die:    { path: "assets/images/enemy5_sprite/Dead.png",   frames: 5,  fw: 128, fh: 128, ft: 0.12 }
+      },
+    
+      onAttackFrame: (enemy, frame) => {
+        const FIRE_FRAME = 10; // good mid-shot moment for 15-frame attack
+        if (enemy.projectileFired) return;
+        if (frame !== FIRE_FRAME) return;
+    
+        enemy.projectileFired = true;
+    
+        const dx = enemy.player.x - enemy.x;
+        const dy = enemy.player.y - enemy.y;
+        const len = Math.hypot(dx, dy) || 1;
+    
+        const vx = dx / len;
+        const vy = dy / len;
+    
+        // spawn slightly in front of archer
+        const spawnX = enemy.x + vx * 42;
+        const spawnY = enemy.y + vy * 18;
+    
+        const S = enemy.def?.stats || {};
+    
+        enemy.game.addEntity(new EnemyProjectile(
+          enemy.game, enemy.AM, enemy.map, enemy.camera, enemy.player,
+          spawnX, spawnY,
+          vx, vy,
+          {
+            imgPath: "assets/images/enemy5_sprite/Arrow.png",
+            speed: S.projectileSpeed ?? 6.5,
+            damage: S.projectileDamage ?? 1,
+            life: S.projectileLife ?? 2.0,
+            radius: 10
+          }
+        ));
+      }
+    },
+
+    enemy6: {
+      stats: {
+        drawSize: 96,
+        speed: 1.55,
+        hp: 4,
+        minFromPlayer: 240,
+        attackCooldown: 1.05,
+
+        attackHitRadius: 56,
+        stopDist: 52,
+        attackRange: 74,
+        invertFlip: false,
+
+        hurtRecovery: 0.22
+      },
+    
+      anim: {
+        idle:   { path: "assets/images/enemy6_sprite/Idle.png",   frames: 7, fw: 128, fh: 128, ft: 0.12 },
+        walk:   { path: "assets/images/enemy6_sprite/Walk.png",   frames: 7, fw: 128, fh: 128, ft: 0.10 },
+        attack: { path: "assets/images/enemy6_sprite/Attack.png", frames: 4, fw: 128, fh: 128, ft: 0.10 },
+        hurt:   { path: "assets/images/enemy6_sprite/Hurt.png",   frames: 3, fw: 128, fh: 128, ft: 0.12 },
+        die:    { path: "assets/images/enemy6_sprite/Dead.png",   frames: 5, fw: 128, fh: 128, ft: 0.12 }
+      }
+    },
   };
 
   // Builds a single enemy definition:

@@ -91,6 +91,9 @@ class GameEngine {
     };
 
     update() {
+        // Global pause handling: freeze world updates while paused.
+        if (this.isPaused) return;
+
         let entitiesCount = this.entities.length;
 
         for (let i = 0; i < entitiesCount; i++) {

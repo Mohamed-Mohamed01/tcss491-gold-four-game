@@ -250,6 +250,67 @@ body {
   display: none;
 }
 
+/* Ending / Credits Overlay */
+.ending-overlay {
+  position: absolute;
+  inset: 0;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(circle at top, rgba(20,20,30,0.9), rgba(5,5,10,0.98));
+  z-index: 3000;
+  overflow: hidden;
+  pointer-events: auto;
+}
+
+.ending-overlay.open {
+  display: flex;
+}
+
+.ending-actions {
+  position: absolute;
+  bottom: 24px;
+  z-index: 2;
+}
+
+.ending-actions .menu-btn {
+  min-width: 200px;
+}
+
+.ending-scroll {
+  position: absolute;
+  bottom: -40%;
+  width: min(80%, 800px);
+  text-align: center;
+  color: rgba(255,255,255,0.95);
+  font-family: "Marcellus", "Merriweather", Georgia, serif;
+  opacity: 0;
+}
+
+.ending-scroll.run {
+  animation: ending-scroll-up 16s linear forwards;
+  opacity: 1;
+}
+
+.ending-title {
+  font-size: 38px;
+  letter-spacing: 1px;
+  margin-bottom: 16px;
+  text-shadow: 0 2px 10px rgba(0,0,0,0.8);
+}
+
+.ending-text {
+  font-size: 18px;
+  line-height: 1.6;
+  text-shadow: 0 2px 8px rgba(0,0,0,0.75);
+}
+
+@keyframes ending-scroll-up {
+  0%   { transform: translateY(60vh); opacity: 0; }
+  10%  { opacity: 1; }
+  100% { transform: translateY(-120vh); opacity: 1; }
+}
+
 
 /* 
    Story scroll overlay
@@ -350,25 +411,12 @@ body {
 
 
 /* 
-   Game container + fullscreen
+   Game container
  */
 #gameContainer {
   position: relative;
   width: fit-content;
   margin: 0 auto;
-}
-
-#gameContainer:fullscreen {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: black;
-}
-
-#gameContainer:fullscreen canvas {
-  width: 100vw;
-  height: 100vh;
-  object-fit: contain;
 }
 
 
@@ -450,8 +498,8 @@ body {
 }
 
 .menu-btn {
-  width: min(340px, 92%);
-  padding: 14px 18px;
+  width: min(320px, 92%);
+  padding: 12px 16px;
   border: 0;
   cursor: pointer;
 
@@ -464,7 +512,7 @@ body {
 
   color: rgba(255,255,255,0.92);
   font-family: "Merriweather", Georgia, serif;
-  font-size: 18px;
+  font-size: 16px;
   letter-spacing: 0.22em;
   text-transform: uppercase;
 
@@ -482,6 +530,10 @@ body {
 .menu-btn:active {
   transform: translateY(0px);
   filter: brightness(0.98);
+}
+
+.menu-btn.hidden {
+  display: none;
 }
 
 
@@ -513,8 +565,8 @@ body {
 
 .howto-card {
   position: relative;
-  width: min(820px, 94%);
-  padding: 26px 24px 22px;
+  width: min(900px, 96%);
+  padding: 18px 18px 16px;
   border-radius: 18px;
 
   background: rgba(10, 12, 16, 0.75);
@@ -528,9 +580,9 @@ body {
 
 .howto-title {
   font-family: "Marcellus", "Merriweather", Georgia, serif;
-  font-size: clamp(32px, 3.6vw, 44px);
+  font-size: clamp(26px, 3.2vw, 36px);
   letter-spacing: 0.12em;
-  margin-bottom: 18px;
+  margin-bottom: 12px;
   -webkit-text-stroke: 2px rgba(0, 0, 0, 0.6);
   text-shadow:
     0 2px 0 rgba(0,0,0,0.45),
@@ -539,12 +591,13 @@ body {
 
 .howto-body {
   display: grid;
-  gap: 18px;
+  gap: 10px;
   text-align: left;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
 }
 
 .howto-section {
-  padding: 14px 16px;
+  padding: 10px 12px;
   border-radius: 14px;
   background: rgba(255,255,255,0.05);
   border: 1px solid rgba(255,255,255,0.08);
@@ -552,22 +605,22 @@ body {
 
 .howto-heading {
   font-family: "Copperplate", "Palatino Linotype", "Book Antiqua", serif;
-  font-size: 16px;
+  font-size: 13px;
   letter-spacing: 0.18em;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
   text-transform: uppercase;
   color: rgba(255,255,255,0.9);
 }
 
 .howto-text {
-  font-size: 16px;
-  line-height: 1.4;
+  font-size: 14px;
+  line-height: 1.35;
   color: rgba(235,235,235,0.9);
 }
 
 .howto-list {
   display: grid;
-  gap: 10px;
+  gap: 6px;
 }
 
 .howto-row {
@@ -579,7 +632,7 @@ body {
 }
 
 .howto-label {
-  font-size: 15px;
+  font-size: 13px;
   color: rgba(235,235,235,0.9);
 }
 
@@ -594,8 +647,8 @@ body {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 34px;
-  padding: 6px 10px;
+  min-width: 28px;
+  padding: 4px 8px;
   border-radius: 8px;
   background: rgba(20, 24, 30, 0.85);
   border: 1px solid rgba(255,255,255,0.18);
@@ -603,13 +656,13 @@ body {
     inset 0 1px 0 rgba(255,255,255,0.08),
     0 2px 6px rgba(0,0,0,0.35);
   font-family: "Courier New", Courier, monospace;
-  font-size: 14px;
+  font-size: 12px;
   letter-spacing: 0.04em;
   text-transform: uppercase;
 }
 
 .howto-actions {
-  margin-top: 18px;
+  margin-top: 10px;
   display: grid;
   justify-items: center;
 }
@@ -656,6 +709,362 @@ body {
 
 
 /* 
+   Levels overlay
+ */
+.levels-overlay {
+  position: absolute;
+  inset: 0;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 1090;
+  pointer-events: none;
+
+  background-image: url("../assets/images/ui_overlay/background_image.png");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+
+  opacity: 0;
+  transform: translateY(6px);
+  transition: opacity 220ms ease, transform 220ms ease;
+}
+
+.levels-overlay::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.55);
+}
+
+.levels-overlay.open {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+.levels-card {
+  position: relative;
+  width: min(720px, 92%);
+  padding: 26px 24px 22px;
+  border-radius: 18px;
+
+  background: rgba(10, 12, 16, 0.78);
+  border: 1px solid rgba(255,255,255,0.16);
+  box-shadow:
+    0 20px 44px rgba(0,0,0,0.55),
+    inset 0 0 0 1px rgba(255,255,255,0.06);
+  text-align: center;
+  color: rgba(255,255,255,0.94);
+}
+
+.levels-title {
+  font-family: "Marcellus", "Merriweather", Georgia, serif;
+  font-size: clamp(30px, 3.4vw, 42px);
+  letter-spacing: 0.12em;
+  margin-bottom: 18px;
+  -webkit-text-stroke: 2px rgba(0, 0, 0, 0.6);
+  text-shadow:
+    0 2px 0 rgba(0,0,0,0.45),
+    0 8px 22px rgba(0,0,0,0.35);
+}
+
+.levels-buttons {
+  display: grid;
+  gap: 14px;
+  justify-items: center;
+}
+
+.level-btn {
+  width: min(420px, 92%);
+  padding: 16px 20px;
+  border: 0;
+  border-radius: 16px;
+  cursor: pointer;
+
+  background: linear-gradient(135deg, rgba(26, 38, 44, 0.95), rgba(42, 62, 70, 0.9));
+  border: 1px solid rgba(255,255,255,0.2);
+  color: rgba(255,255,255,0.95);
+  font-family: "Merriweather", Georgia, serif;
+  font-size: 20px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+
+  box-shadow:
+    0 14px 28px rgba(0,0,0,0.38),
+    inset 0 0 0 1px rgba(255,255,255,0.07),
+    0 0 22px rgba(90, 175, 255, 0.18);
+
+  position: relative;
+  overflow: hidden;
+  transition: transform 140ms ease, box-shadow 140ms ease, filter 140ms ease;
+}
+
+.level-btn::after {
+  content: "";
+  position: absolute;
+  inset: -40% 0 auto -60%;
+  height: 180%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.12), transparent);
+  transform: translateX(-120%);
+  transition: transform 700ms ease;
+}
+
+.level-btn:hover::after {
+  transform: translateX(140%);
+}
+
+.level-btn:hover {
+  transform: translateY(-2px);
+  box-shadow:
+    0 18px 34px rgba(0,0,0,0.45),
+    inset 0 0 0 1px rgba(255,255,255,0.12),
+    0 0 30px rgba(120, 200, 255, 0.28);
+}
+
+.level-btn:active {
+  transform: translateY(0);
+  filter: brightness(0.98);
+}
+
+.level-btn.locked {
+  cursor: not-allowed;
+  opacity: 0.55;
+  filter: grayscale(0.6);
+  box-shadow:
+    0 10px 22px rgba(0,0,0,0.35),
+    inset 0 0 0 1px rgba(255,255,255,0.06);
+}
+
+.level-btn.locked:hover {
+  transform: translateY(0);
+  box-shadow:
+    0 10px 22px rgba(0,0,0,0.35),
+    inset 0 0 0 1px rgba(255,255,255,0.06);
+}
+
+.lock-badge {
+  display: none;
+  margin-left: 10px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgba(0,0,0,0.55);
+  border: 1px solid rgba(255,255,255,0.18);
+  font-size: 12px;
+  letter-spacing: 0.1em;
+}
+
+.lock-badge::before {
+  content: "🔒";
+  margin-right: 6px;
+  font-size: 12px;
+}
+
+.level-btn.locked .lock-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.levels-actions {
+  margin-top: 18px;
+  display: grid;
+  gap: 10px;
+  justify-items: center;
+}
+
+.levels-reset {
+  background: transparent;
+  border: 1px dashed rgba(255,255,255,0.25);
+  color: rgba(255,255,255,0.7);
+  padding: 8px 14px;
+  border-radius: 12px;
+  cursor: pointer;
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  transition: filter 140ms ease, border-color 140ms ease;
+}
+
+.levels-reset:hover {
+  filter: brightness(1.1);
+  border-color: rgba(255,255,255,0.45);
+}
+
+@media (min-width: 900px) {
+  .levels-buttons {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .level-btn {
+    width: 100%;
+  }
+}
+
+
+/* 
+   Shop overlay
+ */
+.shop-overlay {
+  position: absolute;
+  inset: 0;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 1095;
+  pointer-events: none;
+
+  background-image: url("../assets/images/ui_overlay/background_image.png");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+
+  opacity: 0;
+  transform: translateY(6px);
+  transition: opacity 220ms ease, transform 220ms ease;
+}
+
+.shop-overlay::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.62);
+}
+
+.shop-overlay.open {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+.shop-card {
+  position: relative;
+  width: min(640px, 92%);
+  padding: 24px 22px 20px;
+  border-radius: 18px;
+
+  background: rgba(12, 14, 18, 0.8);
+  border: 1px solid rgba(255,255,255,0.16);
+  box-shadow:
+    0 20px 44px rgba(0,0,0,0.55),
+    inset 0 0 0 1px rgba(255,255,255,0.06);
+  text-align: center;
+  color: rgba(255,255,255,0.95);
+}
+
+.shop-title {
+  font-family: "Marcellus", "Merriweather", Georgia, serif;
+  font-size: clamp(28px, 3vw, 38px);
+  letter-spacing: 0.12em;
+  margin-bottom: 10px;
+}
+
+.shop-coins {
+  font-size: 16px;
+  letter-spacing: 0.08em;
+  margin-bottom: 12px;
+  color: rgba(255,255,255,0.85);
+}
+
+.shop-buttons {
+  display: grid;
+  gap: 10px;
+  justify-items: center;
+}
+
+.shop-btn {
+  width: min(440px, 92%);
+  padding: 12px 16px;
+  border: 0;
+  border-radius: 14px;
+  cursor: pointer;
+
+  background: linear-gradient(135deg, rgba(28, 36, 44, 0.95), rgba(44, 58, 70, 0.92));
+  border: 1px solid rgba(255,255,255,0.18);
+  color: rgba(255,255,255,0.95);
+  font-family: "Merriweather", Georgia, serif;
+  font-size: 16px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+
+  box-shadow:
+    0 12px 26px rgba(0,0,0,0.38),
+    inset 0 0 0 1px rgba(255,255,255,0.06);
+  transition: transform 140ms ease, filter 140ms ease, box-shadow 140ms ease;
+}
+
+.shop-btn:hover {
+  transform: translateY(-2px);
+  filter: brightness(1.06);
+}
+
+.shop-btn:active {
+  transform: translateY(0);
+  filter: brightness(0.98);
+}
+
+.shop-feedback {
+  min-height: 20px;
+  margin-top: 10px;
+  font-size: 14px;
+  color: rgba(255,255,255,0.8);
+}
+
+.shop-actions {
+  margin-top: 12px;
+  display: grid;
+  justify-items: center;
+}
+
+/* 
+   NPC Dialogue overlay
+ */
+.npc-overlay {
+  position: absolute;
+  inset: 0;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 1105;
+  pointer-events: none;
+
+  background: rgba(0,0,0,0.55);
+  opacity: 0;
+  transition: opacity 220ms ease;
+}
+
+.npc-overlay.open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.npc-card {
+  width: min(740px, 92%);
+  padding: 22px 24px;
+  border-radius: 16px;
+  background: rgba(10, 12, 16, 0.9);
+  border: 1px solid rgba(255,255,255,0.16);
+  box-shadow:
+    0 18px 40px rgba(0,0,0,0.55),
+    inset 0 0 0 1px rgba(255,255,255,0.06);
+}
+
+.npc-text {
+  font-size: 16px;
+  line-height: 1.5;
+  color: rgba(255,255,255,0.92);
+  white-space: pre-line;
+}
+
+.npc-close-hint {
+  margin-top: 10px;
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  color: rgba(255,255,255,0.7);
+  text-transform: uppercase;
+}
+
+/* 
    Game Over overlay
  */
 #gameOverOverlay {
@@ -666,13 +1075,21 @@ body {
   justify-content: center;
   background: rgba(0,0,0,0.65);
   z-index: 1000;
-  pointer-events: none;
+  pointer-events: auto;
 }
 
 #gameOverOverlay .panel {
   text-align: center;
   color: white;
   font-family: Arial, sans-serif;
+}
+
+#gameOverOverlay .win-buttons {
+  margin: 16px 0 8px;
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  flex-wrap: wrap;
 }
 
 #gameOverOverlay h1 {
@@ -684,6 +1101,12 @@ body {
   margin: 0;
   font-size: 22px;
   opacity: 0.9;
+}
+
+#gameOverOverlay .win-buttons {
+  margin-top: 16px;
+  display: flex;
+  justify-content: center;
 }
 
 

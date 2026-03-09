@@ -29,6 +29,11 @@
   <script src="./game/resource_pickup.js"></script>
 
   <!-- UI (updates DOM elements defined in this file) -->
+  <!-- New Code -->
+  <script src="./game/boss.js"></script>
+  <script src="./game/boss_encounter.js"></script>
+  <script src="./game/npc.js"></script>
+  <script src="./game/minimap.js"></script>
   <script src="./game/hud.js"></script>
 
   <!-- Entry point (queues assets, builds map/entities, wires overlays) -->
@@ -39,9 +44,6 @@
 </head>
 
 <body>
-  <!-- Debug / fullscreen buttons (wired in main.js) -->
-  <button id="debugToggle" type="button">Debug: OFF</button>
-  <button id="fullscreenBtn" type="button">Fullscreen</button>
 
   <div id="gameContainer">
     <!-- Canvas (main render target; must exist for main.js to init the engine) -->
@@ -133,11 +135,70 @@
         <div class="welcome-title">The Lost Barbarian</div>
 
         <div class="welcome-buttons">
+          <button id="resumeBtn" class="menu-btn hidden" type="button">RESUME</button>
           <button id="playBtn" class="menu-btn" type="button">PLAY</button>
           <button id="levelsBtn" class="menu-btn" type="button">LEVELS</button>
           <button id="howToBtn" class="menu-btn" type="button">HOW TO PLAY</button>
-          <button id="creditsBtn" class="menu-btn" type="button">CREDITS</button>
         </div>
+      </div>
+    </div>
+
+    <!-- Levels overlay -->
+    <div id="levelsOverlay" class="levels-overlay">
+      <div class="levels-card">
+        <div class="levels-title">Choose a Level</div>
+
+        <div class="levels-buttons">
+          <button id="level1Btn" class="level-btn" type="button">
+            <span class="level-label">Level 1</span>
+            <span class="lock-badge" aria-hidden="true">Locked</span>
+          </button>
+          <button id="level2Btn" class="level-btn" type="button">
+            <span class="level-label">Level 2</span>
+            <span class="lock-badge" aria-hidden="true">Locked</span>
+          </button>
+          <button id="bossBtn" class="level-btn" type="button">
+            <span class="level-label">BOSS</span>
+            <span class="lock-badge" aria-hidden="true">Locked</span>
+          </button>
+        </div>
+
+        <div class="levels-actions">
+          <button id="levelsBackBtn" class="menu-btn" type="button">BACK</button>
+          <button id="resetProgressBtn" class="levels-reset" type="button">Reset Progress</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Shop overlay -->
+    <div id="shopOverlay" class="shop-overlay">
+      <div class="shop-card">
+        <div class="shop-title">Shop</div>
+
+        <div class="shop-coins">Coins: <span id="shopCoinsText">0</span></div>
+
+        <div class="shop-buttons">
+          <button id="shopHealBtn" class="shop-btn" type="button">Heal (+5) — 4c</button>
+          <button id="shopMaxHpBtn" class="shop-btn" type="button">Max HP +2 — 8c</button>
+          <button id="shopAtkBtn" class="shop-btn" type="button">Attack +1 — 9c</button>
+          <button id="shopSpeedBtn" class="shop-btn" type="button">Speed +0.2 — 7c</button>
+        </div>
+
+        <div id="shopFeedback" class="shop-feedback"></div>
+
+        <div class="shop-actions">
+          <button id="shopCloseBtn" class="menu-btn" type="button">Close</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- NPC Dialogue overlay -->
+    <div id="npcDialogueOverlay" class="npc-overlay">
+      <div class="npc-card">
+        <div id="npcDialogueText" class="npc-text">
+          Hold it right there, traveler...
+        </div>
+        <div class="npc-close-hint">(Press E or Escape to continue)</div>
       </div>
     </div>
 
@@ -149,7 +210,10 @@
         <div class="howto-body">
           <div class="howto-section">
             <div class="howto-heading">Goal</div>
-            <div class="howto-text">Find the three keys and defeat all guardians.</div>
+            <div class="howto-text">
+              Follow the objective text at the top of the screen and progress through the levels.
+              Collect keys to unlock exits in early stages, then face the arena challenge.
+            </div>
           </div>
 
           <div class="howto-section">
@@ -181,17 +245,78 @@
                 </span>
               </div>
               <div class="howto-row">
-                <span class="howto-label">Fullscreen</span>
+                <span class="howto-label">Interact / Talk</span>
                 <span class="howto-keys">
-                  <span class="keycap">F</span>
+                  <span class="keycap">E</span>
                 </span>
               </div>
               <div class="howto-row">
-                <span class="howto-label">Restart (Game Over/Win)</span>
+                <span class="howto-label">Menu</span>
                 <span class="howto-keys">
-                  <span class="keycap">R</span>
+                  <span class="keycap">P</span>
                 </span>
               </div>
+            </div>
+          </div>
+
+          <div class="howto-section">
+            <div class="howto-heading">Objectives & Hints</div>
+            <div class="howto-text">
+              Watch the hint text at the top of the screen. It guides you through keys,
+              arena progress, and special interactions.
+            </div>
+          </div>
+
+          <div class="howto-section">
+            <div class="howto-heading">Pickups</div>
+            <div class="howto-text">
+              Coins help you buy upgrades. Hearts restore health when collected.
+            </div>
+          </div>
+
+          <div class="howto-section">
+            <div class="howto-heading">Shop</div>
+            <div class="howto-text">
+              On the boss level, visit the shop to upgrade health, damage, and speed.
+              Press <span class="keycap">E</span> near the shop to open it.
+            </div>
+          </div>
+
+          <div class="howto-section">
+            <div class="howto-heading">NPCs</div>
+            <div class="howto-text">
+              Talk to NPCs for guidance. Press <span class="keycap">E</span> when prompted.
+            </div>
+          </div>
+
+          <div class="howto-section">
+            <div class="howto-heading">Arena & Boss</div>
+            <div class="howto-text">
+              Enter the arena when ready. Each round grows tougher, and the boss returns
+              stronger every time. Time your attacks and manage your health carefully.
+            </div>
+          </div>
+
+          <div class="howto-section">
+            <div class="howto-heading">Story Scrolls</div>
+            <div class="howto-text">
+              Level 1 includes a story scroll that provides lore. Walk up to it to read.
+            </div>
+          </div>
+
+          <div class="howto-section">
+            <div class="howto-heading">Exits</div>
+            <div class="howto-text">
+              Each level has an exit hidden somewhere on the map. Complete the required objectives
+              first to unlock it. Once your tasks are finished, explore and find the exit to continue.
+              On the boss level, progression leads into the arena encounter.
+            </div>
+          </div>
+
+          <div class="howto-section">
+            <div class="howto-heading">Tips</div>
+            <div class="howto-text">
+              Keep moving, watch enemy patterns, and save health pickups for the hardest fights.
             </div>
           </div>
         </div>
@@ -205,8 +330,11 @@
     <!-- Game over (shown by gameEngine.triggerGameOver in main.js) -->
     <div id="gameOverOverlay">
       <div class="panel">
-        <h1>GAME OVER</h1>
-        <p>Press R to restart</p>
+        <h1>You Have Fallen</h1>
+        <p>The arena has claimed another challenger.<br/>Your journey ends here... for now.</p>
+        <div class="win-buttons">
+          <button id="tryAgainBtn" class="menu-btn" type="button">TRY AGAIN</button>
+        </div>
       </div>
     </div>
 
@@ -221,6 +349,24 @@
         </div>
 
         <div class="win-hint">Press R to restart</div>
+      </div>
+    </div>
+
+    <!-- Ending / Credits Overlay -->
+    <div id="endingOverlay" class="ending-overlay">
+      <div class="ending-scroll">
+        <div class="ending-title">The End</div>
+        <div class="ending-text">
+          Thanks for playing.<br/>
+          We hope you enjoyed the journey through the arena.<br/>
+          Your courage carried you through every trial.<br/>
+          More challenges may await in the future.<br/><br/>
+          Created with care and hard work.
+        </div>
+      </div>
+
+      <div class="ending-actions">
+        <button id="endingRestartBtn" class="menu-btn" type="button">RESTART</button>
       </div>
     </div>
 

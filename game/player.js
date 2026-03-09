@@ -66,6 +66,8 @@ class Player {
 
     this.maxHp = 15;
     this.hp = this.maxHp;
+    this.attackDamage = 1;
+    this.attack2Damage = 2;
 
     this.hurtInvuln = 0;
     this.flashTimer = 0;
@@ -239,7 +241,7 @@ class Player {
       const rect = { x: b.left, y: b.top, w: b.w, h: b.h };
 
       if (this.circleIntersectsRect(atk.cx, atk.cy, atk.r, rect)) {
-        ent.takeDamage?.(1);
+        ent.takeDamage?.(this.attackDamage);
         this.attackCooldown = this.attackCooldownTime;
         this.attackDidHit = true;
         return;
@@ -261,7 +263,7 @@ class Player {
       const rect = { x: b.left, y: b.top, w: b.w, h: b.h };
 
       if (this.circleIntersectsRect(aoe.cx, aoe.cy, aoe.r, rect)) {
-        ent.takeDamage?.(2);
+        ent.takeDamage?.(this.attack2Damage);
         this.attack2HitSet.add(ent);
       }
     }
@@ -292,6 +294,12 @@ class Player {
 
     this.animKey = "attack2_" + this.dir;
     this.animElapsed = 0;
+
+    // New Code
+    // Play slash sound once when Y attack starts
+    const slash = new Audio("assets/sounds/sword_slash.mp3");
+    slash.volume = 0.6;
+    slash.play().catch(() => {});
   }
 
   getAnimKey() {
@@ -307,8 +315,8 @@ class Player {
   update() {
     const dt = this.game.clockTick || 1 / 60;
 
-    // Managed by ScrollStoryPickup (scroll.js)
-    if (this.game.storyModalOpen) {
+    // Managed by ScrollStoryPickup (scroll.js), shop, and NPC dialogue (main.js)
+    if (this.game.storyModalOpen || this.game.shopOpen || this.game.npcDialogueOpen) {
       this.camera.follow(this.x, this.y);
       return;
     }
@@ -347,6 +355,11 @@ class Player {
 
     if (atk1 && !this.attackHeld && !this.attacking && !this.attacking2) {
       this.startAttack();
+
+      // Play sword slash sound on attack start (new Audio each time for rapid triggers)
+      const slash = new Audio("assets/sounds/sword_slash.mp3");
+      slash.volume = 0.6;
+      slash.play().catch(() => {});
     }
 
     this.attackHeld = !!atk1;
